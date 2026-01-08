@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Klaviyo Prompt Library</title>
+    
+    <!-- 1. ESTILOS: Tailwind CSS (Diseño) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- 2. FUENTES: Darker Grotesque -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Darker+Grotesque:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- Configuración de Tailwind -->
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['"Darker Grotesque"', 'sans-serif'],
+            },
+            colors: {
+              brand: {
+                50: '#f0fdf4',
+                100: '#dcfce7',
+                200: '#bbf7d0',
+                500: '#afaaf9',
+                600: '#7756ff',
+                900: '#14532d',
+              }
+            }
+          }
+        }
+      }
+    </script>
+    <style>
+      body { background-color: #2b2a29; margin: 0; }
+      /* Animaciones */
+      @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+      .animate-in { animation: fadeIn 0.3s ease-out forwards; }
+    </style>
+
+    <!-- 3. REACT Y BABEL (Motor de la App) -->
+    <!-- Import Map para usar nombres simples en los imports -->
+    <script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@18.2.0",
+    "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
+    "lucide-react": "https://esm.sh/lucide-react@0.344.0",
+    "react/": "https://esm.sh/react@^19.2.3/",
+    "vite": "https://esm.sh/vite@^7.3.1",
+    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.2"
+  }
+}
+</script>
+    <!-- Babel Standalone permite escribir JSX directamente en el navegador -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<link rel="stylesheet" href="/index.css">
+</head>
+<body>
+    <div id="root">
+        <!-- Pantalla de carga simple -->
+        <div style="height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; font-family: sans-serif;">
+            <svg class="animate-spin h-10 w-10 text-white mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <p>Loading Library...</p>
+        </div>
+    </div>
+
+    <!-- 4. LÓGICA DE LA APLICACIÓN -->
+    <script type="text/babel" data-type="module">
+        import React, { useState, useEffect, useMemo } from 'react';
+        import { createRoot } from 'react-dom/client';
+        import { Sparkles, MessageSquare, Smartphone, GitBranch, Users, BarChart3, Search, Filter, X, Copy, Check, Terminal, BookOpen } from 'lucide-react';
+
+        // --- CONSTANTES Y DATOS ---
+        const APP_TITLE = "Klaviyo + GPT Prompt Hub";
+        const APP_SUBTITLE = "Librería oficial de prompts para Email Marketing & SMS.";
+        
+        const Category = {
+            EMAIL: 'Email Campaigns',
+            SMS: 'SMS Marketing',
+            FLOWS: 'Flows & Automation',
+            SEGMENTATION: 'Segmentation',
+            ANALYTICS: 'Reporting & Analytics'
+        };
+
+        const PROMPTS = [
+          {
+            id: '1',
+            title: 'Welcome Series Generator',
+            shortDescription: 'Create a strategic 3-part welcome series structure for subscribers.',
+            description: 'Detailed framework for a 3-email welcome flow including subject lines, preview text, key objectives, and suggested body copy strategies to engage new subscribers immediately.',
+            content: `Act as a Klaviyo Email Marketing Specialist. Create a strategic outline for a 3-email Welcome Series flow for a [Industry/Niche] brand.\n\nFor each email, provide:\n1. Subject Line (give 3 options with emojis)\n2. Preview Text\n3. Key Objective of the email\n4. Suggested Content/Body Copy summary\n5. Call to Action (CTA)\n\nThe tone should be welcoming, professional, and persuasive.`,
+            category: Category.FLOWS,
+          },
+          {
+            id: '2',
+            title: 'Abandoned Cart Recovery',
+            shortDescription: 'Recover lost sales without being pushy or annoying.',
+            description: 'High-converting copy designed to acknowledge the item, offer a slight incentive if needed, and drive checkout completion with urgency but empathy towards the customer.',
+            content: `Write a high-converting Abandoned Cart email for Klaviyo. The product left in the cart is [Product Name].\n\nConstraints:\n- Tone: Helpful and urgent, but not pushy.\n- Structure: Acknowledge the item, offer a slight incentive (optional), and use a clear button.\n- Include a dynamic placeholder for {{ event.Items }} as a reminder.`,
+            category: Category.EMAIL,
+          },
+          {
+            id: '3',
+            title: 'SMS Flash Sale Alert',
+            shortDescription: 'Punchy, under-160-char texts for 24h flash sales.',
+            description: 'Create 3 urgency-driven SMS variations under 160 characters, including link placeholders and required opt-out language, specifically designed for time-sensitive sales.',
+            content: `Write 3 variations of an SMS campaign for a 24-hour Flash Sale.\n\nRequirements:\n- Under 160 characters.\n- Include placeholder for link [Link].\n- Include opt-out language 'Text STOP to opt out'.\n- Create a sense of urgency using FOMO (Fear Of Missing Out).`,
+            category: Category.SMS,
+          },
+          {
+            id: '4',
+            title: 'VIP Segment Logic',
+            shortDescription: 'Logic to identify and reward your best customers.',
+            description: 'Define specific criteria for a VIP segment based on Lifetime Value (LTV), order count, and AOV to help you target and reward your most loyal spenders effectively.',
+            content: `I need to create a VIP Segment in Klaviyo. Suggest 3 different sets of criteria I could use to define a "VIP Customer" for a fashion e-commerce brand. Consider metrics like:\n- Lifetime Value (LTV)\n- Number of Orders\n- Average Order Value (AOV)\n- Recent activity`,
+            category: Category.SEGMENTATION,
+          },
+          {
+            id: '5',
+            title: 'Subject Line A/B Tester',
+            shortDescription: 'Generate 5 variants to test and boost open rates.',
+            description: 'Create 5 distinct subject line alternatives focusing on curiosity, urgency, and personalization to run effective A/B tests against your control and improve open rates.',
+            content: `I have an email about [Topic]. The current subject line is: "[Current Subject Line]".\n\nPlease generate 5 alternative subject lines to A/B test against this control. \nFocus on different psychological triggers:\n1. Curiosity\n2. Benefit-driven\n3. Urgency\n4. Personalization\n5. Short & Punchy`,
+            category: Category.EMAIL,
+          },
+          {
+            id: '6',
+            title: 'Monthly Report Summary',
+            shortDescription: 'Summarize campaign metrics for stakeholders.',
+            description: 'Analyze open rates, click rates, and revenue per recipient to generate a professional performance summary and actionable strategy recommendations for the next month.',
+            content: `Act as a Data Analyst. I will provide you with the Open Rate, Click Rate, and Revenue per Recipient for my last 4 campaigns. \n\nPlease summarize the performance trends and provide 3 actionable recommendations for next month's strategy based on these metrics.`,
+            category: Category.ANALYTICS,
+          },
+        ];
+
+        // --- COMPONENTES ---
+
+        // 1. Prompt Card
+        const PromptCard = ({ prompt, onClick }) => {
+            const getIcon = (cat) => {
+                switch (cat) {
+                    case Category.EMAIL: return <MessageSquare className="w-5 h-5 text-blue-500" />;
+                    case Category.SMS: return <Smartphone className="w-5 h-5 text-purple-500" />;
+                    case Category.FLOWS: return <GitBranch className="w-5 h-5 text-green-500" />;
+                    case Category.SEGMENTATION: return <Users className="w-5 h-5 text-orange-500" />;
+                    case Category.ANALYTICS: return <BarChart3 className="w-5 h-5 text-red-500" />;
+                    default: return <Sparkles className="w-5 h-5 text-gray-500" />;
+                }
+            };
+            const getCategoryColor = (cat) => {
+                switch (cat) {
+                    case Category.EMAIL: return 'bg-blue-50 text-blue-700 border-blue-100';
+                    case Category.SMS: return 'bg-purple-50 text-purple-700 border-purple-100';
+                    case Category.FLOWS: return 'bg-green-50 text-green-700 border-green-100';
+                    case Category.SEGMENTATION: return 'bg-orange-50 text-orange-700 border-orange-100';
+                    case Category.ANALYTICS: return 'bg-red-50 text-red-700 border-red-100';
+                    default: return 'bg-gray-50 text-gray-700 border-gray-100';
+                }
+            };
+
+            return (
+                <div onClick={() => onClick(prompt)} className="group bg-white rounded-xl border-2 border-[#7756ff] p-6 cursor-pointer transition-all duration-300 hover:shadow-[0_8px_30px_rgb(175,170,249,0.4)] hover:-translate-y-1 flex flex-col h-full">
+                    <div className="flex items-start justify-between mb-4">
+                        <div className={`p-2 rounded-lg ${getCategoryColor(prompt.category).split(' ')[0]}`}>{getIcon(prompt.category)}</div>
+                        <span className={`text-sm font-bold px-3 py-1 rounded-full border ${getCategoryColor(prompt.category)}`}>{prompt.category}</span>
+                    </div>
+                    <h3 className="text-2xl font-extrabold text-gray-900 mb-2 group-hover:text-brand-600 transition-colors leading-tight">{prompt.title}</h3>
+                    <p className="text-gray-500 text-lg leading-snug line-clamp-3 mb-4 flex-grow">{prompt.shortDescription}</p>
+                    <div className="pt-4 border-t border-gray-100 mt-auto flex items-center text-base font-bold text-brand-600 opacity-0 group-hover:opacity-100 transition-opacity">View Prompt &rarr;</div>
+                </div>
+            );
+        };
+
+        // 2. Prompt Modal
+        const PromptModal = ({ prompt, onClose }) => {
+            const [copied, setCopied] = useState(false);
+            useEffect(() => {
+                if (prompt) {
+                    setCopied(false);
+                    document.body.style.overflow = 'hidden';
+                } else {
+                    document.body.style.overflow = 'unset';
+                }
+                return () => { document.body.style.overflow = 'unset'; };
+            }, [prompt]);
+
+            if (!prompt) return null;
+
+            const handleCopy = async () => {
+                try {
+                    await navigator.clipboard.writeText(prompt.content);
+                    setCopied(true);
+                    setTimeout(() => setCopied(false), 2000);
+                } catch (err) { console.error('Copy failed', err); }
+            };
+
+            return (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 animate-in">
+                    <div className="absolute inset-0 bg-gray-900/60 backdrop-blur-sm transition-opacity" onClick={onClose} />
+                    <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
+                        <div className="flex items-center justify-between p-6 border-b border-gray-100 bg-gray-50/50">
+                            <div>
+                                <h2 className="text-2xl font-bold text-gray-900 leading-tight">{prompt.title}</h2>
+                                <p className="text-lg text-gray-500 mt-1">{prompt.category}</p>
+                            </div>
+                            <button onClick={onClose} className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors"><X className="w-6 h-6" /></button>
+                        </div>
+                        <div className="p-6 overflow-y-auto">
+                            <div className="mb-6">
+                                <h4 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-2">Description</h4>
+                                <p className="text-gray-700 text-lg leading-relaxed">{prompt.description}</p>
+                            </div>
+                            <div>
+                                <div className="flex items-center justify-between mb-3">
+                                    <h4 className="text-sm font-bold text-gray-400 uppercase tracking-wider flex items-center gap-2"><Terminal className="w-4 h-4" /> Prompt Content</h4>
+                                    {copied && <span className="text-sm text-green-600 font-bold animate-pulse">Copied to clipboard!</span>}
+                                </div>
+                                <div className="relative group">
+                                    <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <button onClick={handleCopy} className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-semibold transition-all shadow-sm ${copied ? 'bg-green-100 text-green-700' : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'}`}>
+                                            {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />} {copied ? 'Copied' : 'Copy'}
+                                        </button>
+                                    </div>
+                                    <textarea readOnly className="w-full h-80 p-5 bg-gray-50 border border-gray-200 rounded-xl text-gray-800 font-sans text-lg leading-relaxed resize-none focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500" value={prompt.content} />
+                                </div>
+                            </div>
+                        </div>
+                        <div className="p-6 border-t border-gray-100 bg-gray-50 flex justify-end gap-3">
+                            <button onClick={onClose} className="px-5 py-2.5 text-lg font-semibold text-gray-600 hover:text-gray-800 hover:bg-gray-200/50 rounded-lg transition-colors">Close</button>
+                            <button onClick={handleCopy} className="px-6 py-3 text-lg font-bold text-white bg-brand-600 hover:bg-brand-500 rounded-lg shadow-sm shadow-brand-500/30 transition-all flex items-center gap-2">
+                                {copied ? <Check className="w-6 h-6" /> : <Copy className="w-6 h-6" />} {copied ? 'Copied!' : 'Copy Prompt'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // 3. Filters
+        const Filters = ({ searchTerm, onSearchChange, selectedCategory, onCategoryChange }) => {
+            return (
+                <div className="flex flex-col md:flex-row gap-4 mb-8">
+                    <div className="relative flex-grow">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><Search className="h-6 w-6 text-gray-400" /></div>
+                        <input type="text" className="block w-full pl-11 pr-3 py-3 border border-gray-200 rounded-xl leading-5 bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 text-lg shadow-sm" placeholder="Search prompts..." value={searchTerm} onChange={(e) => onSearchChange(e.target.value)} />
+                    </div>
+                    <div className="relative min-w-[220px]">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><Filter className="h-5 w-5 text-gray-500" /></div>
+                        <select value={selectedCategory} onChange={(e) => onCategoryChange(e.target.value)} className="block w-full pl-10 pr-10 py-3 text-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 rounded-xl shadow-sm bg-white appearance-none cursor-pointer">
+                            <option value="All">All Categories</option>
+                            {Object.values(Category).map((cat) => <option key={cat} value={cat}>{cat}</option>)}
+                        </select>
+                    </div>
+                </div>
+            );
+        };
+
+        // --- MAIN APP COMPONENT ---
+        const App = () => {
+            const [searchTerm, setSearchTerm] = useState('');
+            const [selectedCategory, setSelectedCategory] = useState('All');
+            const [activePrompt, setActivePrompt] = useState(null);
+
+            const filteredPrompts = useMemo(() => {
+                return PROMPTS.filter((prompt) => {
+                    const matchesSearch = prompt.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                                          prompt.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                                          prompt.shortDescription.toLowerCase().includes(searchTerm.toLowerCase());
+                    const matchesCategory = selectedCategory === 'All' || prompt.category === selectedCategory;
+                    return matchesSearch && matchesCategory;
+                });
+            }, [searchTerm, selectedCategory]);
+
+            return (
+                <div className="min-h-screen bg-[#2b2a29] pb-20 font-sans">
+                    <header className="bg-[#7756ff] border-b border-[#6649e0] pt-12 pb-20 px-4 sm:px-6 lg:px-8">
+                        <div className="max-w-7xl mx-auto text-center">
+                            <div className="flex justify-center items-center mb-6">
+                                <img src="https://powerdigitalmarketing.com/wp-content/uploads/2024/10/logo-white.svg" alt="Power Digital Marketing" className="h-7 sm:h-9 w-auto opacity-95" />
+                            </div>
+                            <h1 className="text-4xl font-extrabold text-white tracking-tight sm:text-5xl mb-2">{APP_TITLE}</h1>
+                            <h2 className="text-xl font-semibold text-indigo-100 tracking-wide mb-6">Lifecycle Marketing Team</h2>
+                            <p className="max-w-3xl mx-auto text-xl sm:text-2xl text-indigo-200/90 font-light leading-relaxed">{APP_SUBTITLE}</p>
+                        </div>
+                    </header>
+                    <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-12">
+                        <div className="bg-white rounded-2xl shadow-xl border border-gray-200 p-6 sm:p-8">
+                            <Filters searchTerm={searchTerm} onSearchChange={setSearchTerm} selectedCategory={selectedCategory} onCategoryChange={setSelectedCategory} />
+                            {filteredPrompts.length > 0 ? (
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    {filteredPrompts.map((prompt) => <PromptCard key={prompt.id} prompt={prompt} onClick={setActivePrompt} />)}
+                                </div>
+                            ) : (
+                                <div className="text-center py-20">
+                                    <div className="inline-block p-4 rounded-full bg-gray-100 mb-4"><BookOpen className="w-8 h-8 text-gray-400" /></div>
+                                    <h3 className="text-lg font-medium text-gray-900">No prompts found</h3>
+                                    <p className="text-gray-500 mt-1">Try adjusting your search.</p>
+                                    <button onClick={() => { setSearchTerm(''); setSelectedCategory('All'); }} className="mt-4 text-brand-600 font-medium hover:text-brand-500">Clear all filters</button>
+                                </div>
+                            )}
+                        </div>
+                    </main>
+                    <footer className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12 text-center text-gray-500 text-sm">
+                        <p>&copy; {new Date().getFullYear()} PDM - Lifecycle Team. Internal Use Only.</p>
+                    </footer>
+                    <PromptModal prompt={activePrompt} onClose={() => setActivePrompt(null)} />
+                </div>
+            );
+        };
+
+        // Renderizado
+        const root = createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+<script type="module" src="/index.tsx"></script>
+</body>
+</html>
